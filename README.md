@@ -1,3 +1,5 @@
+# This is based on starter https://github.com/udacity/FSND/tree/master/projects/02_trivia_api/starter
+
 # Full Stack API Final Project
 
 ## Full Stack Trivia
