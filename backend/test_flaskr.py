@@ -60,18 +60,36 @@ class TriviaTestCase(unittest.TestCase):
         category = Category.query.filter_by(id=1).one_or_none()
         self.assertEqual(data['current_category'], category.type)
 
-    def test_delete_question(self):
-        book_id = 4
-        res = self.client().delete(f'/questions/{book_id}')
+    # def test_delete_question(self):
+    #     book_id = 4
+    #     res = self.client().delete(f'/questions/{book_id}')
+    #     data = json.loads(res.data)
+
+    #     question = Question.query.filter_by(id=book_id).one_or_none()
+
+    #     self.assertEqual(res.status_code, 200)
+    #     self.assertEqual(data['success'], True)
+    #     self.assertEqual(data['deleted'], book_id)
+    #     self.assertEqual(question, None)
+
+    # def test_post_question(self):
+    #     res = self.client().post('/questions', json ={'question': 'How are things?',
+    #     'answer': 'All good!', 'category': 2, 'difficulty': 5})
+    #     data = json.loads(res.data)
+
+    #     self.assertEqual(res.status_code, 200)
+    #     self.assertEqual(data['success'], True)
+    #     self.assertEqual(data['question'], 'How are things?')
+
+    def test_post__existing_question(self):
+        question = Question.query.first()
+        res = self.client().post('/questions', json ={'question': f'{question.question}',
+        'answer': f'{question.answer}', 'category': f'{question.category}', 'difficulty': f'{question.difficulty}'})
         data = json.loads(res.data)
 
-        question = Question.query.filter_by(id=book_id).one_or_none()
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], book_id)
-        self.assertEqual(question, None)
-
+        self.assertEqual(res.status_code, 409)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Already exist")
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

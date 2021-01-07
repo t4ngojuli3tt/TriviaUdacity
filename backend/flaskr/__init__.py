@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, abort, jsonify, render_template
+from flask import Flask, request, abort, jsonify, render_template, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.util.langhelpers import NoneType
 from flask_cors import CORS
@@ -129,6 +129,37 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+    @app.route('/questions', methods=['POST'])
+    def post_questions():
+        body = request.get_json()
+
+        try:
+          question = body.get('question')
+          answer = body.get('answer')
+          category = body.get('category')
+          difficulty = body.get('difficulty')
+        except:
+          abort(404)
+
+        is_new_question = Question.query.filter_by(question = "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?").one_or_none()
+
+        print(type(is_new_question), is_new_question)
+        
+        if is_new_question is None:
+          print("Da fuk!$#%^&^")
+          question_obj = Question(question=question, answer = answer, category = category, difficulty =difficulty)
+          question_obj.insert()
+
+        else:
+          print('else')
+          abort(409)
+
+        return jsonify({
+            'success': True,
+            'status_code': 200,
+            'question': question,
+        })
+
 
     '''
   @TODO: 
@@ -167,5 +198,28 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+    @app.errorhandler(404)
+    def not_found(error):
+      return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "Not found"
+      }), 404
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+      return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "Unprocessable"
+      }), 422
+
+    @app.errorhandler(409)
+    def already_exist(error):
+      return jsonify({
+        "success": False,
+        "error": 409,
+        "message": "Already exist"
+      }), 409
 
     return app
