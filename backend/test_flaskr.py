@@ -2,6 +2,7 @@ import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 from flaskr import create_app
 from models import setup_db, Question, Category, db_user, db_password, db_host
@@ -81,7 +82,7 @@ class TriviaTestCase(unittest.TestCase):
     #     self.assertEqual(data['success'], True)
     #     self.assertEqual(data['question'], 'How are things?')
 
-    def test_post__existing_question(self):
+    def test_post_existing_question(self):
         question = Question.query.first()
         res = self.client().post('/questions', json ={'question': f'{question.question}',
         'answer': f'{question.answer}', 'category': f'{question.category}', 'difficulty': f'{question.difficulty}'})
@@ -90,6 +91,45 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 409)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], "Already exist")
+
+    def test_search_question(self):
+        
+        res = self.client().post('/questions/search', json ={'search_term': 'title'})
+        data = json.loads(res.data)
+
+        search_result = Question.query.filter(func.lower(Question.question).\
+            contains('title', autoescape=True)).all()
+        
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(len(data['results']), len(search_result))
+
+    def test_get_questions_by_category(self):
+        category_id = 1
+        res = self.client().get(f'/questions/categories/{category_id}')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+
+    def test_get_questions_by_category_404(self):
+        category_id = 10
+        res = self.client().get(f'/questions/categories/{category_id}')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+    
+    def test_post_play(self):
+        res = self.client().post('/play', json ={'category_id': 1, 'previous_questions': [20,21]})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['category_id'], 1)
+        self.assertEqual(data['question'], 'Hematology is a branch of medicine involving the study of what?')
+        self.assertEqual(data['previous_questions'], [20,21,22])
+        
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

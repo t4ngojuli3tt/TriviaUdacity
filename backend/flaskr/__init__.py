@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, abort, jsonify, render_template, abort
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, not_ 
 from sqlalchemy.util.langhelpers import NoneType
 from flask_cors import CORS
 import random
@@ -138,20 +139,17 @@ def create_app(test_config=None):
           answer = body.get('answer')
           category = body.get('category')
           difficulty = body.get('difficulty')
+
         except:
           abort(404)
 
         is_new_question = Question.query.filter_by(question = "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?").one_or_none()
-
-        print(type(is_new_question), is_new_question)
         
         if is_new_question is None:
-          print("Da fuk!$#%^&^")
           question_obj = Question(question=question, answer = answer, category = category, difficulty =difficulty)
           question_obj.insert()
 
         else:
-          print('else')
           abort(409)
 
         return jsonify({
@@ -171,7 +169,18 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
-
+    @app.route('/questions/search', methods=['POST'])
+    def search_questions():
+        body = request.get_json()
+        search_term = body.get('search_term')
+        search_result = Question.query.filter(func.lower(Question.question).\
+        contains(search_term.lower(), autoescape=True)).all()
+        results = [question.format() for question in search_result] 
+        return jsonify({
+            'success': True,
+            'status_code': 200,
+            'results':results
+        })
     '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
@@ -180,7 +189,20 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+    @app.route('/questions/categories/<int:category_id>')
+    def get_questions_by_category(category_id):
+        if Category.query.filter_by(id= category_id).one_or_none() is None:
+          print(category_id)
+          abort(404)
+        questions = Question.query.filter_by(category= category_id).all()
+        #category_questions = [question.format() for question in questions]
+        category_questions = paginate_questions(request, questions)
 
+        return jsonify({
+            'success': True,
+            'status_code': 200,
+            'category_questions': category_questions
+        })
     '''
   @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
@@ -192,6 +214,31 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+    @app.route('/play', methods=['POST'])
+    def post_play():
+        body = request.get_json()
+        category_id = body.get('category_id')
+        previous_questions = body.get('previous_questions')
+
+        if category_id is None:
+            question_selection = Question.query.filter(not_(Question.id.in_(previous_questions))).all()
+        elif Category.query.filter_by(id= category_id).one_or_none() is None:
+            print(category_id)
+            abort(404)
+        else:
+            question_selection = Question.query.filter_by(category = category_id)\
+                .filter(not_(Question.id.in_(previous_questions))).all()
+        
+        questions = [question.format() for question in question_selection]
+        question = random.choice(questions)
+        previous_questions.append(question["id"])
+        return jsonify({
+            'success': True,
+            'status_code': 200,
+            'category_id': category_id,
+            'question': question["question"],
+            'previous_questions': previous_questions
+        })
 
     '''
   @TODO: 
@@ -200,26 +247,26 @@ def create_app(test_config=None):
   '''
     @app.errorhandler(404)
     def not_found(error):
-      return jsonify({
-        "success": False,
-        "error": 404,
-        "message": "Not found"
-      }), 404
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Not found"
+        }), 404
 
     @app.errorhandler(422)
     def unprocessable(error):
-      return jsonify({
-        "success": False,
-        "error": 422,
-        "message": "Unprocessable"
-      }), 422
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable"
+        }), 422
 
     @app.errorhandler(409)
     def already_exist(error):
-      return jsonify({
-        "success": False,
-        "error": 409,
-        "message": "Already exist"
-      }), 409
+        return jsonify({
+            "success": False,
+            "error": 409,
+            "message": "Already exist"
+        }), 409
 
     return app
