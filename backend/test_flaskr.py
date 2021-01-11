@@ -61,26 +61,26 @@ class TriviaTestCase(unittest.TestCase):
         category = Category.query.filter_by(id=1).one_or_none()
         self.assertEqual(data['current_category'], category.type)
 
-    # def test_delete_question(self):
-    #     book_id = 4
-    #     res = self.client().delete(f'/questions/{book_id}')
-    #     data = json.loads(res.data)
+    def test_delete_question(self):
+        book_id = 4
+        res = self.client().delete(f'/questions/{book_id}')
+        data = json.loads(res.data)
 
-    #     question = Question.query.filter_by(id=book_id).one_or_none()
+        question = Question.query.filter_by(id=book_id).one_or_none()
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertEqual(data['deleted'], book_id)
-    #     self.assertEqual(question, None)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['deleted'], book_id)
+        self.assertEqual(question, None)
 
-    # def test_post_question(self):
-    #     res = self.client().post('/questions', json ={'question': 'How are things?',
-    #     'answer': 'All good!', 'category': 2, 'difficulty': 5})
-    #     data = json.loads(res.data)
+    def test_post_question(self):
+        res = self.client().post('/questions', json ={'question': 'How are things?',
+        'answer': 'All good!', 'category': 2, 'difficulty': 5})
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertEqual(data['question'], 'How are things?')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['question'], 'How are things?')
 
     def test_post_existing_question(self):
         question = Question.query.first()
@@ -94,7 +94,7 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_question(self):
         
-        res = self.client().post('/questions/search', json ={'search_term': 'title'})
+        res = self.client().post('/questions/search', json ={'searchTerm': 'title'})
         data = json.loads(res.data)
 
         search_result = Question.query.filter(func.lower(Question.question).\
@@ -102,11 +102,11 @@ class TriviaTestCase(unittest.TestCase):
         
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(len(data['results']), len(search_result))
+        self.assertEqual(len(data['questions']), len(search_result))
 
     def test_get_questions_by_category(self):
         category_id = 1
-        res = self.client().get(f'/questions/categories/{category_id}')
+        res = self.client().get(f'/categories/{category_id}/questions')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -121,14 +121,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
     
     def test_post_play(self):
-        res = self.client().post('/play', json ={'category_id': 1, 'previous_questions': [20,21]})
+        res = self.client().post('/play', json ={'quiz_category':{'id': 1}, 'previous_questions': [20,21]})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['category_id'], 1)
-        self.assertEqual(data['question'], 'Hematology is a branch of medicine involving the study of what?')
-        self.assertEqual(data['previous_questions'], [20,21,22])
+        self.assertEqual(data['question']['question'], 'Hematology is a branch of medicine involving the study of what?')
+ 
         
 
 # Make the tests conveniently executable

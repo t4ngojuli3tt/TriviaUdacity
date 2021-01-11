@@ -47,7 +47,7 @@ def create_app(test_config=None):
         if len(selection) == 0:
             abort(404)
 
-        categories = [category.format() for category in selection]
+        categories = {category.id: category.type for category in selection}
 
         return jsonify({
             'success': True,
@@ -81,7 +81,7 @@ def create_app(test_config=None):
         current_questions = paginate_questions(request, questions)
 
         selection = Category.query.all()
-        categories = [category.format() for category in selection]
+        categories = {category.id: category.type for category in selection}
 
         if len(current_questions) == 0:
             abort(404)
@@ -143,7 +143,7 @@ def create_app(test_config=None):
         except:
           abort(404)
 
-        is_new_question = Question.query.filter_by(question = "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?").one_or_none()
+        is_new_question = Question.query.filter_by(question = question).one_or_none()
         
         if is_new_question is None:
           question_obj = Question(question=question, answer = answer, category = category, difficulty =difficulty)
@@ -172,14 +172,16 @@ def create_app(test_config=None):
     @app.route('/questions/search', methods=['POST'])
     def search_questions():
         body = request.get_json()
-        search_term = body.get('search_term')
+        search_term = body.get('searchTerm')
         search_result = Question.query.filter(func.lower(Question.question).\
         contains(search_term.lower(), autoescape=True)).all()
-        results = [question.format() for question in search_result] 
+        questions = [question.format() for question in search_result] 
         return jsonify({
             'success': True,
             'status_code': 200,
-            'results':results
+            'questions': questions,
+            'total_questions': len(questions),
+            'current_category': None
         })
     '''
   @TODO: 
@@ -189,7 +191,7 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
-    @app.route('/questions/categories/<int:category_id>')
+    @app.route('/categories/<int:category_id>/questions')
     def get_questions_by_category(category_id):
         if Category.query.filter_by(id= category_id).one_or_none() is None:
           print(category_id)
@@ -201,7 +203,7 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'status_code': 200,
-            'category_questions': category_questions
+            'questions': category_questions
         })
     '''
   @TODO: 
@@ -217,7 +219,7 @@ def create_app(test_config=None):
     @app.route('/play', methods=['POST'])
     def post_play():
         body = request.get_json()
-        category_id = body.get('category_id')
+        category_id = body.get('quiz_category')['id'] 
         previous_questions = body.get('previous_questions')
 
         if category_id is None:
@@ -229,15 +231,12 @@ def create_app(test_config=None):
             question_selection = Question.query.filter_by(category = category_id)\
                 .filter(not_(Question.id.in_(previous_questions))).all()
         
-        questions = [question.format() for question in question_selection]
-        question = random.choice(questions)
-        previous_questions.append(question["id"])
+        #questions = [question.format() for question in question_selection]
+        question = random.choice(question_selection).format()
         return jsonify({
             'success': True,
             'status_code': 200,
-            'category_id': category_id,
-            'question': question["question"],
-            'previous_questions': previous_questions
+            'question': question,
         })
 
     '''
