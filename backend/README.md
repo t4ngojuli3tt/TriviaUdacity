@@ -76,6 +76,11 @@ GET ...
 POST ...
 DELETE ...
 
+
+All endpoint returns contains keys success and status_code with boolean and int values respectively  (e.g.   {"status_code": 200, "success": true, ...} )
+
+
+
 GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
@@ -86,6 +91,79 @@ GET '/categories'
 '4' : "History",
 '5' : "Entertainment",
 '6' : "Sports"}
+
+
+
+GET '/questions'
+- Fetches a list dictionaries of questios in which the keys are names of questions class atributes and the value is the corresponding value of the atribute for a gives question. Fetches also all categories in the same format as GET '/categoires'/
+- Request Arguments:  
+    -category(int) - optional, None by default -  coresponding to id of category for which we want to get questions
+    -page(int) - opitional, 1 by default - page argument for pagination
+- Returns: An object with a keys:
+    - categories - same as for GET '/categoires'/
+    - current_category - name of category for which questions were fatched
+        e.g. "current_category": "Science" 
+    - questions - list of dictionaries containig question details
+        e.g. "questions": [
+        {
+        "answer": "Maya Angelou", 
+        "category": 4, 
+        "difficulty": 2, 
+        "id": 5, 
+        "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
+        }, ...]
+    - total_questions - number of all questions
+        e.g. "total_questions": 19
+
+
+DELETE '/questions/<int:question_id>'
+- Delete question from the database
+- Request Arguments:  question_id (int) - id of the question to be deleted 
+- Returns: An object with a keys:
+    - deleted - id of question that was deleted 
+        e.g. "deleted": 1
+    - questions and total_questions - same as in GET '/questions'
+ 
+
+POST '/questions'
+- Post new question to the database
+- Request Arguments:  json object with question, answer, category and difficulty fildes
+- Returns: An object with a keys:
+    - question - value of this key is a string containg posted question
+        e.g. "question": "How are you?"
+
+
+POST '/questions/search'
+- Fetches a list dictionaries of questions same as GET '\questions', but only with questions which contains search term
+- Request Arguments:  
+    -searchTerm(string)  -  
+- Returns: Similar object to the one return by GET '\questions' by this one does not contain categories key, and the list of question is restricted to the ones which match search term. 
+
+
+GET '/categories/<int:category_id>/questions'
+- Fetches a list dictionaries of questios for a given category.
+- Request Arguments:  
+    -category(int) - optional, None by default -  coresponding to id of category for which we want to get questions
+    -page(int) - opitional, 1 by default - page argument for pagination
+- Returns: An object with a keys:
+    - questions - same as GET '/questions'
+
+
+POST '/play'
+- Fetches a random question from a given category.
+- Request Arguments:  
+    - quiz_category (dict) - optional, None by default -  dictionary with two keys id and type
+    -previous_questions(list of int) - by default empyt list - list of question to be exlcude from this request
+- Returns: An object with a keys:
+    - question - dictionary with question, answer, category and difficulty keys
+        e.g. "question":
+        {
+        "answer": "Maya Angelou", 
+        "category": 4, 
+        "difficulty": 2, 
+        "id": 5, 
+        "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
+        }
 
 ```
 
