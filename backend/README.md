@@ -79,6 +79,12 @@ DELETE ...
 
 All endpoint returns contains keys success and status_code with boolean and int values respectively  (e.g.   {"status_code": 200, "success": true, ...} )
 
+There are 3 error handlers (404,409, 422), all returns json with three key value paris and error code
+e.g jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Not found"
+        }), 404
 
 
 GET '/categories'
@@ -91,7 +97,8 @@ GET '/categories'
 '4' : "History",
 '5' : "Entertainment",
 '6' : "Sports"}
-
+- Errors:
+    - 404 -  if there is no category
 
 
 GET '/questions'
@@ -114,6 +121,8 @@ GET '/questions'
         }, ...]
     - total_questions - number of all questions
         e.g. "total_questions": 19
+- Errors:
+    - 404 - if the idea of category is incorrect or there is no question in selected category 
 
 
 DELETE '/questions/<int:question_id>'
@@ -123,7 +132,9 @@ DELETE '/questions/<int:question_id>'
     - deleted - id of question that was deleted 
         e.g. "deleted": 1
     - questions and total_questions - same as in GET '/questions'
- 
+- Errors:
+    - 404 - if question to be deleted wasn't found in the database
+
 
 POST '/questions'
 - Post new question to the database
@@ -131,6 +142,9 @@ POST '/questions'
 - Returns: An object with a keys:
     - question - value of this key is a string containg posted question
         e.g. "question": "How are you?"
+- Errors:
+    - 422 - if body does not contains requiered data
+    - 409 - if question is already in the database
 
 
 POST '/questions/search'
@@ -147,7 +161,8 @@ GET '/categories/<int:category_id>/questions'
     -page(int) - opitional, 1 by default - page argument for pagination
 - Returns: An object with a keys:
     - questions - same as GET '/questions'
-
+- Errors:
+    - 404 - if category_id does not corespond to any category id in the database 
 
 POST '/play'
 - Fetches a random question from a given category.
@@ -164,7 +179,8 @@ POST '/play'
         "id": 5, 
         "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
         }
-
+- Errors:
+    - 404 - if category_id does not corespond to any category id in the database 
 ```
 
 
